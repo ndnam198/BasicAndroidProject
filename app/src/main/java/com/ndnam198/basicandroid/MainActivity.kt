@@ -47,93 +47,21 @@ import com.squareup.picasso.Target
 class MainActivity : AppCompatActivity() {
     private val DEBUG_TAG = "BASIC_ANDROID"
     private val LOCATION_PERMISSION_REQUEST_CODE = 1
-    private val versionCode = BuildConfig.VERSION_CODE
-    private val versionName = BuildConfig.VERSION_NAME
-    private lateinit var fusedLocationClient: FusedLocationProviderClient
-    private lateinit var locationCallback: LocationCallback
-    private var locationPermission = false
+
+
+    //A callback for receiving notifications from the FusedLocationProviderClient.
+    lateinit var locationCallback: LocationCallback
+
+    //The main entry point for interacting with the Fused Location Provider
+    lateinit var locationProvider: FusedLocationProviderClient
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
-        locationCallback = object : LocationCallback() {
-            override fun onLocationResult(locationResult: LocationResult) {
-                super.onLocationResult(locationResult)
-                locationResult.lastLocation?.let {
-                    val latitude = it.latitude
-                    val longitude = it.longitude
-                    Log.d(DEBUG_TAG, "location data: $latitude, $longitude")
-                }
-            }
-        }
-
         setContent {
             AppUI()
         }
-    }
-
-    override fun onStop() {
-        super.onStop()
-        fusedLocationClient.removeLocationUpdates(locationCallback)
-    }
-
-
-    private fun checkLocationPermissions() {
-        if (ActivityCompat.checkSelfPermission(
-                // FIXME crash here
-                this, android.Manifest.permission.ACCESS_FINE_LOCATION
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
-            ActivityCompat.requestPermissions(
-                this, arrayOf(
-                    android.Manifest.permission.ACCESS_FINE_LOCATION
-                ), LOCATION_PERMISSION_REQUEST_CODE
-            )
-        } else {
-            getLocation()
-
-        }
-//        if (checkSelfPermission(
-//                android.Manifest.permission.ACCESS_FINE_LOCATION
-//            ) != PackageManager.PERMISSION_GRANTED
-//        ) {
-//            requestPermissions(
-//                arrayOf(android.Manifest.permission.ACCESS_FINE_LOCATION),
-//                LOCATION_PERMISSION_REQUEST_CODE
-//            )
-//        } else {
-//            // Permissions are already granted, proceed with location retrieval
-//            getLocation()
-//        }
-    }
-
-
-    override fun onRequestPermissionsResult(
-        requestCode: Int, permissions: Array<String>, grantResults: IntArray
-    ) {
-        Log.d(DEBUG_TAG, "onRequestPermissionsResult called")
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (requestCode == LOCATION_PERMISSION_REQUEST_CODE) {
-            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                // Permission was granted, proceed with location retrieval
-                getLocation()
-            } else {
-                // Permission was denied, handle this case
-                // For example, show a message or disable location-related features
-            }
-        }
-    }
-
-    @SuppressLint("MissingPermission")
-    private fun getLocation() {
-        Log.d(DEBUG_TAG, "getting location")
-
-        // FIXME a lot of deprecation
-        val locationRequest = LocationRequest.create()
-        locationRequest.priority = LocationRequest.PRIORITY_HIGH_ACCURACY
-        fusedLocationClient.requestLocationUpdates(locationRequest, locationCallback, null)
     }
 
 
@@ -146,8 +74,8 @@ class MainActivity : AppCompatActivity() {
             Text(text = "Display App version")
         }
         if (isDisplayAppVer) {
-            Text(text = "Version :$versionName")
-            Text(text = "Build   :$versionCode")
+            Text(text = "Version :${BuildConfig.VERSION_NAME}")
+            Text(text = "Build   :${BuildConfig.VERSION_CODE}")
         }
     }
 
@@ -209,7 +137,10 @@ class MainActivity : AppCompatActivity() {
             Image(bitmap = image!!, contentDescription = "Bitmap image")
         } else if (drawable != null) {
             // Display the Image using Image composable
-            Image(bitmap = drawable!!.toBitmap().asImageBitmap(), contentDescription = "Drawable Image")
+            Image(
+                bitmap = drawable!!.toBitmap().asImageBitmap(),
+                contentDescription = "Drawable Image"
+            )
         }
     }
 
